@@ -53,7 +53,12 @@ extern "C" __declspec(dllexport) int GetStatus_AnalogIn(HDWF hdwf,
 	int fReadData,
 	STS* psts
 	);
-extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf);
+extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, 
+	//int timeout,		// timeout 
+	int idxChannel,		// index of Channel
+	double rgdSamples[],	// Array pointer to Sample buffer, must be pre-allocated
+	int BufferSize	// sample record legngth
+	);
 extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
 	int fReconfigure,
 	int fStart
@@ -62,19 +67,26 @@ extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
 extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf,
 	double hzFrquency,	// sampling rate
 	int nSize,			// buffer size
-	ACQMODE acqmode,	// acqmodeSingle: single acq
+	ACQMODE AcqMode		// acqmodeSingle: single acq
 						// acqmodeRecord: acquisition for length of time
-	double RecordLength // record length in sec
+//	double RecordLength	// dupliate of buffersize, commmented.	
 	);
 extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf);
 
 // Channel dependent configure
-extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, int indexCh, int Range);
+extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, 
+	int indexCh,	// channel info
+	int Enable,		// enable Channel
+	double voltsRange,		// DAQ Range
+	FILTER Filter,	// filter: decimate, average, minmax
+	double voltOffset	//Offset, aka, vertical position
+	);
 extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf);
+/*
 extern "C" __declspec(dllexport) int SetChannelEnable_AnalogIn(HDWF hdwf, int indexCh, int fEnable);
 extern "C" __declspec(dllexport) int SetFilter_AnalogIn(HDWF hdwf, int indexCh, FILTER filter);
 extern "C" __declspec(dllexport) int SetRange_AnalogIn(HDWF hdwf, int indexCh, double voltsRange);
-
+*/
 
 
 // AnalogOut functions
@@ -112,3 +124,40 @@ int Set_Trigger(HDWF hdwf, int idxPin,TRIGSRC trigsrc = trigsrcExternal1){
 
 
 //AnalogIn 
+extern "C" __declspec(dllexport) int GetStatus_AnalogIn(HDWF hdwf, int fReadData, STS *psts){
+	FDwfAnalogInStatus(hdwf, true, psts);
+	// STS: Byte 
+}
+
+extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, /*int timeout,*/int idxChannel, double rgdSamples[], int BufferSize){
+	return FDwfAnalogInStatusData (hdwf, idxChannel, rgdSamples, BufferSize);
+}
+
+extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
+	int fReconfigure,
+	int fStart
+	);
+// Channel independent configure
+extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode = acqmodeSingle /*, double RecordLength */){
+	int error = false;
+
+	error = FDwfAnalogInFrequencySet(hdwf, hzFrquency);
+	error = error || FDwfAnalogInBufferSizeSet(hdwf, nSize);
+	error = error || FDwfAnalogInAcquisitionModeSet(hdwf, AcqMode);
+
+	return error;
+}
+extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
+	return 0;
+}
+
+
+// Channel dependent configure
+extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, 
+	int indexCh,	// channel info
+	int Enable,		// enable Channel
+	double voltsRange,		// DAQ Range
+	FILTER Filter,	// filter: decimate, average, minmax
+	double voltOffset	//Offset, aka, vertical position
+	);
+extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf);

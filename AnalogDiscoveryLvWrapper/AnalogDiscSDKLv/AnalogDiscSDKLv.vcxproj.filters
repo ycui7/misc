@@ -24,7 +24,10 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\..\Program Files (x86)\Digilent\WaveFormsSDK\inc\dwf.h">
+    <ClInclude Include="AnalogDiscSDKLv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\Program Files (x86)\Digilent\WaveFormsSDK\inc\dwf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,12 +38,9 @@
     <ClCompile Include="AnalogDiscSDKLv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\..\..\..\..\Program Files (x86)\Digilent\WaveFormsSDK\lib\x86\dwf.lib">
+    <Library Include="..\..\..\..\..\..\Program Files (x86)\Digilent\WaveFormsSDK\lib\x86\dwf.lib">
       <Filter>Header Files</Filter>
     </Library>
   </ItemGroup>

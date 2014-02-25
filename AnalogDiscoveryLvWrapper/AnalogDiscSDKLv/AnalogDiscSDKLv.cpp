@@ -1,101 +1,83 @@
-// AnalogDiscSDKLv.cpp : Defines the exported functions for the DLL application.
-//
+// AnalogDiscSDKLv.cpp : LabVIEW C calling wrapper dll.
+// Copyright (C) 2014 Yang Cui
+// vmbncy@gmail.com
+// Licensed under GPLv3 
+
+// Most nomenclature made consistent with WaveForm's SDK manual
+// This is only a partial SDK wrapper, to get the work done quick. 
+// If you like more features to be added, please donate to 
+// BTC: 1ARLZ8rDFSwqRQqYSE8AA2JuH7ZUFwfNTw 
+// 
+
+
 
 #include "stdafx.h"
-#include "dwf.h"
-// #include <stdio.h>
+#include "AnalogDiscSDKLv.h"
 
 
-// Device Enumeration
-extern "C" __declspec(dllexport) int Enum_DevLv(ENUMFILTER enumfilter, int * pnDevice);
-
-// Device Initial/Open/Close/Reset
-extern "C" __declspec(dllexport) int Open_DevLv(int idxDev, HDWF *hdwf);
-extern "C" __declspec(dllexport) int Close_DevLv(HDWF hdwf);
-extern "C" __declspec(dllexport) int Reset_DevLv(HDWF hdwf);
-extern "C" __declspec(dllexport) int SetAutoConfig_DevLv(HDWF hdwf, int fAutoConfig);
-
-// Trigger functions
-
-extern "C" __declspec(dllexport) int GetInfo_Trigger(HDWF hdwf, int* pfstrigsrc);
-extern "C" __declspec(dllexport) int Set_Trigger(HDWF hdwf, int idxPin, TRIGSRC trigsrc);
-
-// Analog Trigger functins
-extern "C" __declspec(dllexport) int Set_Analog_Trigger(HDWF hdwf, 
-	int idxchannel,				// channel index
-	double position,			// trigger delay
-	double timeout,
-	double holdoff,				// trigger holdoff
-	TRIGTYPE type,				// edge, pulse, transition triger
-	FILTER filter,				// decimate, average
-	double voltsLevel,			// trigger level
-	double HystersisvoltsLEvel,	// hysterisis level
-	TRIGCOND trigcond			// rising or falling 
-	);
-extern "C" __declspec(dllexport) int GetConfig_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int GetStatus_Trigger(HDWF hdwf);
-
-/*
-extern "C" __declspec(dllexport) int GetSource_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int SetSource_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int GetPosition_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int SetPosition_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int SetTimeout_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int GetTimeout_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int SetHoldOff_Trigger(HDWF hdwf);
-extern "C" __declspec(dllexport) int GetHoldOff_Trigger(HDWF hdwf);
-*/
-
-
-// AnalogIn functions
-//Status
-extern "C" __declspec(dllexport) int GetStatus_AnalogIn(HDWF hdwf,
-	int fReadData,
-	STS* psts
-	);
-extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, 
-	//int timeout,		// timeout 
-	int idxChannel,		// index of Channel
-	double rgdSamples[],	// Array pointer to Sample buffer, must be pre-allocated
-	int BufferSize	// sample record legngth
-	);
-extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
-	int fReconfigure,
-	int fStart
-	);
-// Channel independent configure
-extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf,
-	double hzFrquency,	// sampling rate
-	int nSize,			// buffer size
-	ACQMODE AcqMode		// acqmodeSingle: single acq
-						// acqmodeRecord: acquisition for length of time
-//	double RecordLength	// dupliate of buffersize, commmented.	
-	);
-extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf);
-
-// Channel dependent configure
-extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, 
-	int indexCh,	// channel info
-	int Enable,		// enable Channel
-	double voltsRange,		// DAQ Range
-	FILTER Filter,	// filter: decimate, average, minmax
-	double voltOffset	//Offset, aka, vertical position
-	);
-extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf);
-/*
-extern "C" __declspec(dllexport) int SetChannelEnable_AnalogIn(HDWF hdwf, int indexCh, int fEnable);
-extern "C" __declspec(dllexport) int SetFilter_AnalogIn(HDWF hdwf, int indexCh, FILTER filter);
-extern "C" __declspec(dllexport) int SetRange_AnalogIn(HDWF hdwf, int indexCh, double voltsRange);
-*/
-
-
-// AnalogOut functions
-extern "C" __declspec(dllexport) int SetDataAnalogOut(HDWF hdwf);
 
 
 /********************************************************
  *  Wrapper start here                                  *
  ********************************************************/
+int debugLevel = 0;
+
+bool FApi(const char * szApi, BOOL fResult){
+//    if(debugLevel>=2) printf(">>%s\n", szApi);
+    if(fResult == 0){
+        char szError[512];
+        FDwfGetLastErrorMsg(szError);
+        // printf("FAILED: %s\n%s\n", szApi, szError);
+        return false;
+    }
+ //   if(debugLevel>=3) PrintDateTime(false);
+    return true;
+}
+
+
+//typedef struct{
+//	int DevId;
+//	char DevName[512];
+//	char SerialNum[512];
+//	char userName[512];
+//	int isBusy;
+//}DeviceInfo;
+
+
+
+
+int Enum_DevLv(ENUMFILTER enumfilter, int * pnDevice, char DevName[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], char SN[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], char UserName[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], int isBusy[MAX_DEVICE_NUMBER], DEVID DeviceID[MAX_DEVICE_NUMBER], DEVVER DeviceVersion[MAX_DEVICE_NUMBER]){
+    int devcount = 0;
+	char sz[512];
+    BOOL fBusy;
+    DEVID devid;
+    DEVVER devver;
+    HDWF h = hdwfNone;
+
+    if(!FApi("FDwfEnum", FDwfEnum(enumfilterAll, &devcount))) return false;
+
+	*pnDevice = devcount;
+
+    for(int i = 0; i < devcount; i++){
+
+        if(!FApi("FDwfEnumDeviceName", FDwfEnumDeviceName(i, sz))) continue;
+        strcpy(DevName[i], sz);
+
+        if(!FApi("FDwfEnumSN", FDwfEnumSN(i, sz))) continue;
+		strcpy(SN[i], sz);
+
+        if(!FApi("FDwfEnumUserName", FDwfEnumUserName(i, sz))) continue;
+		strcpy(UserName[i], sz);
+        
+        if(!FApi("FDwfEnumDeviceType", FDwfEnumDeviceType(i, &devid, &devver))) continue;
+		DeviceID[i] = devid;
+		DeviceVersion[i] = devver;
+
+        if(!FApi("FDwfEnumDeviceIsOpened", FDwfEnumDeviceIsOpened(i, &fBusy))) continue;
+        isBusy[i] = fBusy;
+    }
+	return true;	// 1 : normal, 0 : error 
+}
 
 // Device Initial/Open/Close/Reset
 int Open_DevLv(int idxDev, HDWF *phdwf){
@@ -125,18 +107,18 @@ int Set_Trigger(HDWF hdwf, int idxPin,TRIGSRC trigsrc = trigsrcExternal1){
 
 //AnalogIn 
 extern "C" __declspec(dllexport) int GetStatus_AnalogIn(HDWF hdwf, int fReadData, STS *psts){
-	FDwfAnalogInStatus(hdwf, true, psts);
+	return FDwfAnalogInStatus(hdwf, true, psts);
 	// STS: Byte 
 }
 
-extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, /*int timeout,*/int idxChannel, double rgdSamples[], int BufferSize){
+extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, int idxChannel, double rgdSamples[], int BufferSize){
 	return FDwfAnalogInStatusData (hdwf, idxChannel, rgdSamples, BufferSize);
 }
 
-extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
-	int fReconfigure,
-	int fStart
-	);
+extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	int fReconfigure, int fStart){
+	return FDwfAnalogInConfigure(hdwf, fReconfigure, fStart);
+}
+
 // Channel independent configure
 extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode = acqmodeSingle /*, double RecordLength */){
 	int error = false;
@@ -153,11 +135,17 @@ extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
 
 
 // Channel dependent configure
-extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, 
-	int indexCh,	// channel info
-	int Enable,		// enable Channel
-	double voltsRange,		// DAQ Range
-	FILTER Filter,	// filter: decimate, average, minmax
-	double voltOffset	//Offset, aka, vertical position
-	);
-extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf);
+extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, int idxChannel, int fEnable,	double voltsRange, FILTER Filter, double voltOffset){
+	int error = 0;
+
+	error = FDwfAnalogInChannelEnableSet(hdwf, idxChannel, fEnable);
+	error = error || FDwfAnalogInChannelFilterSet(hdwf, idxChannel, Filter);
+	error = error || FDwfAnalogInChannelRangeSet(hdwf, idxChannel, voltsRange);
+	error = error || FDwfAnalogInChannelOffsetSet(hdwf, idxChannel, voltOffset); // voltOffset consistent with official manual
+
+	return error;
+}
+
+extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf){
+	return 0;
+}

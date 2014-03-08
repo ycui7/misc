@@ -37,9 +37,9 @@ bool FApi(const char * szApi, BOOL fResult){
 
 //typedef struct{
 //	int DevId;
-//	char DevName[512];
-//	char SerialNum[512];
-//	char userName[512];
+//	char DevName[32];
+//	char SerialNum[32];
+//	char userName[32];
 //	int isBusy;
 //}DeviceInfo;
 
@@ -96,56 +96,68 @@ int SetAutoConfig_DevLv(HDWF hdwf, int fAutoConfig){
 
 // Trigger functions
 
-int GetInfo_Trigger(HDWF hdwf, int* pfstrigsrc){
-	return FDwfDeviceTriggerInfo(hdwf, pfstrigsrc);
+int GetInfo_AnalogIn_Trigger(HDWF hdwf, TRIGSRC * ptrigsrc){
+	return FDwfAnalogInTriggerSourceGet(hdwf, ptrigsrc);
 }
-int Set_Trigger(HDWF hdwf, int idxPin,TRIGSRC trigsrc = trigsrcExternal1){
-	return FDwfDeviceTriggerSet(hdwf, idxPin, trigsrc);
+int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout){
+	int noerror = false;
+
+	if(FDwfAnalogInTriggerAutoTimeoutSet(hdwf, timeout))
+		noerror = true;
+	if(FDwfAnalogInTriggerSourceSet(hdwf, AItrigsrc))
+		noerror = true;
+	return noerror;
 }
 
 
 
 //AnalogIn 
-extern "C" __declspec(dllexport) int GetStatus_AnalogIn(HDWF hdwf, int fReadData, STS *psts){
+int GetStatus_AnalogIn(HDWF hdwf, int fReadData, STS *psts){
 	return FDwfAnalogInStatus(hdwf, true, psts);
 	// STS: Byte 
 }
 
-extern "C" __declspec(dllexport) int GetData_AnalogIn(HDWF hdwf, int idxChannel, double rgdSamples[], int BufferSize){
+int GetData_AnalogIn(HDWF hdwf, int idxChannel, double rgdSamples[], int BufferSize){
 	return FDwfAnalogInStatusData (hdwf, idxChannel, rgdSamples, BufferSize);
 }
 
-extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	int fReconfigure, int fStart){
+int Config_AnalogIn(HDWF hdwf,	int fReconfigure, int fStart){
 	return FDwfAnalogInConfigure(hdwf, fReconfigure, fStart);
 }
 
 // Channel independent configure
-extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode = acqmodeSingle /*, double RecordLength */){
-	int error = false;
+int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode = acqmodeSingle /*, double RecordLength */){
+	int noerror = false;
 
-	error = FDwfAnalogInFrequencySet(hdwf, hzFrquency);
-	error = error || FDwfAnalogInBufferSizeSet(hdwf, nSize);
-	error = error || FDwfAnalogInAcquisitionModeSet(hdwf, AcqMode);
-
-	return error;
+	if(FDwfAnalogInFrequencySet(hdwf, hzFrquency))
+		noerror = true;
+	if(FDwfAnalogInBufferSizeSet(hdwf, nSize))
+		noerror = true;
+	if(FDwfAnalogInAcquisitionModeSet(hdwf, AcqMode))
+		noerror = true;
+	return noerror;
 }
-extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
+int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
 	return 0;
 }
 
 
 // Channel dependent configure
-extern "C" __declspec(dllexport) int SetChannelsConfig_AnalogIn(HDWF hdwf, int idxChannel, int fEnable,	double voltsRange, FILTER Filter, double voltOffset){
-	int error = 0;
+int SetChannelsConfig_AnalogIn(HDWF hdwf, int idxChannel, int fEnable,	double voltsRange, FILTER Filter, double voltOffset){
+	int noerror = 0;
 
-	error = FDwfAnalogInChannelEnableSet(hdwf, idxChannel, fEnable);
-	error = error || FDwfAnalogInChannelFilterSet(hdwf, idxChannel, Filter);
-	error = error || FDwfAnalogInChannelRangeSet(hdwf, idxChannel, voltsRange);
-	error = error || FDwfAnalogInChannelOffsetSet(hdwf, idxChannel, voltOffset); // voltOffset consistent with official manual
+	if(FDwfAnalogInChannelEnableSet(hdwf, idxChannel, fEnable))
+		noerror = true;
+	if(FDwfAnalogInChannelFilterSet(hdwf, idxChannel, Filter))
+		noerror = true;
+	if(FDwfAnalogInChannelRangeSet(hdwf, idxChannel, voltsRange))
+		noerror = true;
+	if(FDwfAnalogInChannelOffsetSet(hdwf, idxChannel, voltOffset))
+		noerror = true; 	// voltOffset consistent with official manual
 
-	return error;
+	return noerror;
 }
 
-extern "C" __declspec(dllexport) int GetChannelsConfig_AnalogIn(HDWF hdwf){
+int GetChannelsConfig_AnalogIn(HDWF hdwf){
 	return 0;
 }

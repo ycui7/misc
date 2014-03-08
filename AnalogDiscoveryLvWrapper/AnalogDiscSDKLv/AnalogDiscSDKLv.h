@@ -22,8 +22,8 @@ extern "C" __declspec(dllexport) int SetAutoConfig_DevLv(HDWF hdwf, int fAutoCon
 
 // Trigger functions
 
-extern "C" __declspec(dllexport) int GetInfo_Trigger(HDWF hdwf, int* pfstrigsrc);
-extern "C" __declspec(dllexport) int Set_Trigger(HDWF hdwf, int idxPin, TRIGSRC trigsrc);
+extern "C" __declspec(dllexport) int GetInfo_AnalogIn_Trigger(HDWF hdwf, TRIGSRC * ptrigsrc);
+extern "C" __declspec(dllexport) int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout);
 
 // Analog Trigger functins
 extern "C" __declspec(dllexport) int Set_Analog_Trigger(HDWF hdwf, 

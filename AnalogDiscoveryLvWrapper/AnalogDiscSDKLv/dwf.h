@@ -1,28 +1,31 @@
 /************************************************************************/
 /*                                                                      */
-/*    dwf.h  --    Public Interface Declarations for DWF.DLL	        */
+/*    dwf.h  --    Public Interface Declarations for DWF.DLL            */
 /*                                                                      */
 /************************************************************************/
-/*    Author: Laszlo Attila Kovacs										*/
+/*    Author: Laszlo Attila Kovacs                                      */
 /*    Copyright 2013 Digilent Inc.                                      */
 /************************************************************************/
 /*  File Description:                                                   */
 /*                                                                      */
-/*    This header file contains the public interface declarations for	*/
-/*    the DWF.DLL.  This interface constists of  hardware device		*/
-/*	  enumeration, connection (open/close), and hardware instrument		*/
-/*	  control.  This spans all 4 main instruments  supported by the		*/
-/*    WaveForms system:													*/
-/*			Analog In, Analog Out, Analog I/O, and Digital I/O			*/
-/*																		*/
-/*	  For details on using this interface, refer to:					*/
-/*	  The WaveForms SDK User's Manual (available in the WaveForms SDK)	*/
+/*    This header file contains the public interface declarations for   */
+/*    the DWF.DLL.  This interface constists of  hardware device        */
+/*    enumeration, connection (open/close), and hardware instrument     */
+/*    control.  This spans all 4 main instruments  supported by the     */
+/*    WaveForms system:                                                 */
+/*      Analog In, Analog Out, Analog I/O, and Digital I/O              */
+/*                                                                      */
+/*    For details on using this interface, refer to:                    */
+/*    The WaveForms SDK User's Manual (available in the WaveForms SDK)  */
 /*                                                                      */
 /************************************************************************/
 /*  Revision History:                                                   */
 /*                                                                      */
-/*  08/1/2013(JPederson):  Edited for initial public release (WF 2.5)   */
 /*  06/6/2009(KovacsLA) : Created                                       */
+/*  08/1/2013(JPederson):  Edited for initial public release (WF 2.5)   */
+/*  11/07/2013(KovacsLA) : added FDWFAnalogOutMaster* functions         */
+/*   DwfState declarations                                              */
+/*  10/14/2013(KovacsLA) : added FDWFAnalogOutNode* functions           */
 /*                                                                      */
 /************************************************************************/
 
@@ -49,22 +52,30 @@
     #endif
 #endif
 
-//WaveForms hardware device handle
+#ifndef BOOL
+typedef int BOOL;
+#endif
+
+#ifndef BYTE
+typedef	unsigned char	BYTE;
+#endif
+
+// hardware device handle
 typedef int HDWF;
 const HDWF hdwfNone = 0;
 
-// Hardware device enumeration filters
+// device enumeration filters
 typedef int ENUMFILTER;
 const ENUMFILTER enumfilterAll      = 0;
 const ENUMFILTER enumfilterEExplorer= 1;
 const ENUMFILTER enumfilterDiscovery= 2;
 
-// Hardware device ID
+// device ID
 typedef int DEVID;
 const DEVID devidEExplorer  = 1;
 const DEVID devidDiscovery  = 2;
 
-// Hardware device version
+// device version
 typedef int DEVVER;
 const DEVVER devverEExplorerC   = 2;
 const DEVVER devverEExplorerE   = 4;
@@ -73,81 +84,79 @@ const DEVVER devverDiscoveryA   = 1;
 const DEVVER devverDiscoveryB   = 2;
 const DEVVER devverDiscoveryC   = 3;
 
-// Trigger source:
+// trigger source
 typedef BYTE TRIGSRC;
-const TRIGSRC trigsrcNone				= 0;
-const TRIGSRC trigsrcPC					= 1;
+const TRIGSRC trigsrcNone               = 0;
+const TRIGSRC trigsrcPC                 = 1;
 const TRIGSRC trigsrcDetectorAnalogIn   = 2;
 const TRIGSRC trigsrcDetectorDigitalIn  = 3;
-const TRIGSRC trigsrcAnalogIn			= 4;
-const TRIGSRC trigsrcDigitalIn			= 5;
-const TRIGSRC trigsrcDigitalOut			= 6;
-const TRIGSRC trigsrcAnalogOut1			= 7;
-const TRIGSRC trigsrcAnalogOut2			= 8;
-const TRIGSRC trigsrcAnalogOut3			= 9;
-const TRIGSRC trigsrcAnalogOut4			= 10;
-const TRIGSRC trigsrcExternal1			= 11;
-const TRIGSRC trigsrcExternal2			= 12;
-const TRIGSRC trigsrcExternal3			= 13;
-const TRIGSRC trigsrcExternal4			= 14;
+const TRIGSRC trigsrcAnalogIn           = 4;
+const TRIGSRC trigsrcDigitalIn          = 5;
+const TRIGSRC trigsrcDigitalOut         = 6;
+const TRIGSRC trigsrcAnalogOut1         = 7;
+const TRIGSRC trigsrcAnalogOut2         = 8;
+const TRIGSRC trigsrcAnalogOut3         = 9;
+const TRIGSRC trigsrcAnalogOut4         = 10;
+const TRIGSRC trigsrcExternal1          = 11;
+const TRIGSRC trigsrcExternal2          = 12;
+const TRIGSRC trigsrcExternal3          = 13;
+const TRIGSRC trigsrcExternal4          = 14;
 
-// Instrument status:
-typedef BYTE STS;
-const STS stsRdy		= 0;
-const STS stsArm		= 1;
-const STS stsDone		= 2;
-const STS stsTrig		= 3;
-const STS stsCfg		= 4;
-const STS stsPrefill	= 5;
-const STS stsNotDone	= 6;
-const STS stsTrigDly	= 7;
-const STS stsError		= 8;
-const STS stsBusy		= 9;
-const STS stsStop		= 10;
+// instrument states:
+typedef BYTE DwfState;
+const DwfState DwfStateReady        = 0;
+const DwfState DwfStateConfig       = 4;
+const DwfState DwfStatePrefill      = 5;
+const DwfState DwfStateArmed        = 1;
+const DwfState DwfStateWait         = 7;
+const DwfState DwfStateTriggered    = 3;
+const DwfState DwfStateRunning      = 3;
+const DwfState DwfStateDone         = 2;
 
-// Scope acquisition mode:
+// acquisition modes:
 typedef int ACQMODE;
-const ACQMODE acqmodeSingle		= 0;
+const ACQMODE acqmodeSingle     = 0;
 const ACQMODE acqmodeScanShift  = 1;
 const ACQMODE acqmodeScanScreen = 2;
-const ACQMODE acqmodeRecord		= 3;
+const ACQMODE acqmodeRecord     = 3;
 
-// Scope acquisition filter:
+// analog acquisition filter:
 typedef int FILTER;
 const FILTER filterDecimate = 0;
 const FILTER filterAverage  = 1;
 const FILTER filterMinMax   = 2;
 
-// Scope trigger type:
+// analog in trigger mode:
 typedef int TRIGTYPE;
 const TRIGTYPE trigtypeEdge         = 0;
 const TRIGTYPE trigtypePulse        = 1;
 const TRIGTYPE trigtypeTransition   = 2;
 
-// Scope trigger type:
+// analog in trigger condition
 typedef int TRIGCOND;
 const TRIGCOND trigcondRisingPositive   = 0;
 const TRIGCOND trigcondFallingNegative  = 1;
 
-// Scope trigger type:
+// analog in trigger length condition
 typedef int TRIGLEN;
 const TRIGLEN triglenLess       = 0;
 const TRIGLEN triglenTimeout    = 1;
 const TRIGLEN triglenMore       = 2;
 
-// Error Codes for DWF Public API:
+// error codes for DWF Public API:
 typedef int DWFERC;                           
-const   DWFERC dwfercNoErc                  = 0;		//  No error occurred
-const   DWFERC dwfercUnknownError           = 1;		//  API waiting on pending API timed out
-const   DWFERC dwfercApiLockTimeout         = 2;		//  API waiting on pending API timed out
-const   DWFERC dwfercAlreadyOpened          = 3;		//  Device already opened
-const   DWFERC dwfercNotSupported           = 4;		//  Device not supported
-const   DWFERC dwfercInvalidParameter0      = 0x10;		//  Invalid parameter sent in API call
-const   DWFERC dwfercInvalidParameter1      = 0x11;		//  Invalid parameter sent in API call
-const   DWFERC dwfercInvalidParameter2      = 0x12;		//  Invalid parameter sent in API call
-const   DWFERC dwfercInvalidParameter3      = 0x13;		//  Invalid parameter sent in API call
+const   DWFERC dwfercNoErc                  = 0;        //  No error occurred
+const   DWFERC dwfercUnknownError           = 1;        //  API waiting on pending API timed out
+const   DWFERC dwfercApiLockTimeout         = 2;        //  API waiting on pending API timed out
+const   DWFERC dwfercAlreadyOpened          = 3;        //  Device already opened
+const   DWFERC dwfercNotSupported           = 4;        //  Device not supported
+const   DWFERC dwfercInvalidParameter0      = 0x10;     //  Invalid parameter sent in API call
+const   DWFERC dwfercInvalidParameter1      = 0x11;     //  Invalid parameter sent in API call
+const   DWFERC dwfercInvalidParameter2      = 0x12;     //  Invalid parameter sent in API call
+const   DWFERC dwfercInvalidParameter3      = 0x13;     //  Invalid parameter sent in API call
+const   DWFERC dwfercInvalidParameter4      = 0x14;     //  Invalid parameter sent in API call
 
-// Generated signal function type:
+// analog out signal types
 typedef BYTE FUNC;
 const FUNC funcDC       = 0;
 const FUNC funcSine     = 1;
@@ -159,13 +168,45 @@ const FUNC funcNoise    = 6;
 const FUNC funcCustom   = 30;
 const FUNC funcPlay     = 31;
 
-// Analog IO channel node type:
+// analog io channel node types
 typedef BYTE ANALOGIO;
-const ANALOGIO analogioEnable		= 1;
-const ANALOGIO analogioVoltage		= 2;
-const ANALOGIO analogioCurrent		= 3;
-const ANALOGIO analogioPower		= 4;
-const ANALOGIO analogioTemperature	= 5;
+const ANALOGIO analogioEnable       = 1;
+const ANALOGIO analogioVoltage      = 2;
+const ANALOGIO analogioCurrent      = 3;
+const ANALOGIO analogioPower        = 4;
+const ANALOGIO analogioTemperature  = 5;
+
+typedef int AnalogOutNode;
+const AnalogOutNode AnalogOutNodeCarrier  = 0;
+const AnalogOutNode AnalogOutNodeFM       = 1;
+const AnalogOutNode AnalogOutNodeAM       = 2;
+
+typedef int DwfDigitalInClockSource;
+const DwfDigitalInClockSource DwfDigitalInClockSourceInternal = 0;
+const DwfDigitalInClockSource DwfDigitalInClockSourceExternal = 1;
+
+typedef int DwfDigitalInSampleMode;
+const DwfDigitalInSampleMode DwfDigitalInSampleModeSimple   = 0;
+// alternate samples: noise|sample|noise|sample|...  
+// where noise is more than 1 transition between 2 samples
+const DwfDigitalInSampleMode DwfDigitalInSampleModeNoise    = 1; 
+
+typedef int DwfDigitalOutOutput;
+const DwfDigitalOutOutput DwfDigitalOutOutputPushPull   = 0;
+const DwfDigitalOutOutput DwfDigitalOutOutputOpenDrain  = 1;
+const DwfDigitalOutOutput DwfDigitalOutOutputOpenSource = 2;
+const DwfDigitalOutOutput DwfDigitalOutOutputThreeState = 3; // for custom and random
+
+typedef int DwfDigitalOutType;
+const DwfDigitalOutType DwfDigitalOutTypePulse      = 0;
+const DwfDigitalOutType DwfDigitalOutTypeCustom     = 1;
+const DwfDigitalOutType DwfDigitalOutTypeRandom     = 2;
+
+typedef int DwfDigitalOutIdle;
+const DwfDigitalOutIdle DwfDigitalOutIdleInit     = 0;
+const DwfDigitalOutIdle DwfDigitalOutIdleLow      = 1;
+const DwfDigitalOutIdle DwfDigitalOutIdleHigh     = 2;
+const DwfDigitalOutIdle DwfDigitalOutIdleZet      = 3;
 
 // Macro used to verify if bit is 1 or 0 in given bit field
 #define IsBitSet(fs, bit) ((fs & (1<<bit)) != 0)
@@ -178,7 +219,7 @@ DWFAPI BOOL FDwfGetVersion(char szVersion[32]);  // Returns DLL version, for ins
 
 // DEVICE MANAGMENT FUNCTIONS
 // Enumeration:
-DWFAPI BOOL FDwfEnum(ENUMFILTER enumfilter, int * pcDeviceFound);
+DWFAPI BOOL FDwfEnum(ENUMFILTER enumfilter, int * pcDevice);
 DWFAPI BOOL FDwfEnumDeviceType(int idxDevice, DEVID* pDeviceId, DEVVER* pDeviceRevision);
 DWFAPI BOOL FDwfEnumDeviceIsOpened(int idxDevice, BOOL* pfIsUsed);
 DWFAPI BOOL FDwfEnumUserName(int idxDevice, char szUserName[32]);
@@ -189,8 +230,8 @@ DWFAPI BOOL FDwfEnumSN(int idxDevice, char szSN[32]);
 DWFAPI BOOL FDwfDeviceOpen(int idxDevice, HDWF *phdwf);
 DWFAPI BOOL FDwfDeviceClose(HDWF hdwf);
 DWFAPI BOOL FDwfDeviceCloseAll();
-DWFAPI BOOL FDwfDeviceAutoConfigureSet(HDWF hdwf, BOOL fConfigureWhenSet);
-DWFAPI BOOL FDwfDeviceAutoConfigureGet(HDWF hdwf, BOOL* pfConfigureWhenSet);
+DWFAPI BOOL FDwfDeviceAutoConfigureSet(HDWF hdwf, BOOL fAutoConfigure);
+DWFAPI BOOL FDwfDeviceAutoConfigureGet(HDWF hdwf, BOOL* pfAutoConfigure);
 DWFAPI BOOL FDwfDeviceReset(HDWF hdwf);
 DWFAPI BOOL FDwfDeviceTriggerInfo(HDWF hdwf, int* pfstrigsrc); // use IsBitSet
 DWFAPI BOOL FDwfDeviceTriggerSet(HDWF hdwf, int idxPin, TRIGSRC trigsrc);
@@ -198,12 +239,11 @@ DWFAPI BOOL FDwfDeviceTriggerGet(HDWF hdwf, int idxPin, TRIGSRC* ptrigsrc);
 DWFAPI BOOL FDwfDeviceTriggerPC(HDWF hdwf);
 
 
-
 // ANALOG IN INSTRUMENT FUNCTIONS
 // Control and status: 
 DWFAPI BOOL FDwfAnalogInReset(HDWF hdwf);
 DWFAPI BOOL FDwfAnalogInConfigure(HDWF hdwf, BOOL fReconfigure, BOOL fStart);
-DWFAPI BOOL FDwfAnalogInStatus(HDWF hdwf, BOOL fReadData, STS* psts);
+DWFAPI BOOL FDwfAnalogInStatus(HDWF hdwf, BOOL fReadData, DwfState* psts);
 DWFAPI BOOL FDwfAnalogInStatusSamplesLeft(HDWF hdwf, int* pcSamplesLeft);
 DWFAPI BOOL FDwfAnalogInStatusSamplesValid(HDWF hdwf, int* pcSamplesValid);
 DWFAPI BOOL FDwfAnalogInStatusIndexWrite(HDWF hdwf, int* pidxWrite);
@@ -253,6 +293,7 @@ DWFAPI BOOL FDwfAnalogInTriggerSourceGet(HDWF hdwf, TRIGSRC* ptrigsrc);
 DWFAPI BOOL FDwfAnalogInTriggerPositionInfo(HDWF hdwf, double* psecMin, double* psecMax, double* pnSteps);
 DWFAPI BOOL FDwfAnalogInTriggerPositionSet(HDWF hdwf, double secPosition);
 DWFAPI BOOL FDwfAnalogInTriggerPositionGet(HDWF hdwf, double* psecPosition);
+DWFAPI BOOL FDwfAnalogInTriggerPositionStatus(HDWF hdwf, double* psecPosition);
 
 DWFAPI BOOL FDwfAnalogInTriggerAutoTimeoutInfo(HDWF hdwf, double* psecMin, double* psecMax, double* pnSteps);
 DWFAPI BOOL FDwfAnalogInTriggerAutoTimeoutSet(HDWF hdwf, double secTimeout);
@@ -295,19 +336,12 @@ DWFAPI BOOL FDwfAnalogInTriggerLengthConditionSet(HDWF hdwf, TRIGLEN triglen);
 DWFAPI BOOL FDwfAnalogInTriggerLengthConditionGet(HDWF hdwf, TRIGLEN* ptriglen);
 
 
-
 // ANALOG OUT INSTRUMENT FUNCTIONS
-// Control:
-DWFAPI BOOL FDwfAnalogOutReset(HDWF hdwf, int idxChannel);
-DWFAPI BOOL FDwfAnalogOutConfigure(HDWF hdwf, int idxChannel, BOOL fStart);
-DWFAPI BOOL FDwfAnalogOutStatus(HDWF hdwf, int idxChannel, STS* psts);
-DWFAPI BOOL FDwfAnalogOutPlayStatus(HDWF hdwf, int idxChannel, int* cdDataFree, int *cdDataLost, int *cdDataCorrupted);
-DWFAPI BOOL FDwfAnalogOutPlayData(HDWF hdwf, int idxChannel, double* rgdData, int cdData);
-
 // Configuration:
 DWFAPI BOOL FDwfAnalogOutCount(HDWF hdwf, int* pcChannel);
-DWFAPI BOOL FDwfAnalogOutEnableSet(HDWF hdwf, int idxChannel, BOOL fEnable);
-DWFAPI BOOL FDwfAnalogOutEnableGet(HDWF hdwf, int idxChannel, BOOL* pfEnable);
+
+DWFAPI BOOL FDwfAnalogOutMasterSet(HDWF hdwf, int idxChannel, int idxMaster);
+DWFAPI BOOL FDwfAnalogOutMasterGet(HDWF hdwf, int idxChannel, int *pidxMaster);
 
 DWFAPI BOOL FDwfAnalogOutTriggerSourceInfo(HDWF hdwf, int idxChannel, int* pfstrigsrc); // use IsBitSet
 DWFAPI BOOL FDwfAnalogOutTriggerSourceSet(HDWF hdwf, int idxChannel, TRIGSRC trigsrc);
@@ -330,33 +364,48 @@ DWFAPI BOOL FDwfAnalogOutRepeatStatus(HDWF hdwf, int idxChannel, int* pcRepeat);
 DWFAPI BOOL FDwfAnalogOutRepeatTriggerSet(HDWF hdwf, int idxChannel, BOOL fRepeatTrigger);
 DWFAPI BOOL FDwfAnalogOutRepeatTriggerGet(HDWF hdwf, int idxChannel, BOOL* pfRepeatTrigger);
 
-DWFAPI BOOL FDwfAnalogOutFunctionInfo(HDWF hdwf, int idxChannel, int* pfsfunc); // use IsBitSet
-DWFAPI BOOL FDwfAnalogOutFunctionSet(HDWF hdwf, int idxChannel, FUNC func);
-DWFAPI BOOL FDwfAnalogOutFunctionGet(HDWF hdwf, int idxChannel, FUNC* pfunc);
+DWFAPI BOOL FDwfAnalogOutNodeInfo(HDWF hdwf, int idxChannel, int* pfsnode); // use IsBitSet
 
-DWFAPI BOOL FDwfAnalogOutFrequencyInfo(HDWF hdwf, int idxChannel, double* phzMin, double* phzMax);
-DWFAPI BOOL FDwfAnalogOutFrequencySet(HDWF hdwf, int idxChannel, double hzFrequency);
-DWFAPI BOOL FDwfAnalogOutFrequencyGet(HDWF hdwf, int idxChannel, double* phzFrequency);
+DWFAPI BOOL FDwfAnalogOutNodeEnableSet(HDWF hdwf, int idxChannel, AnalogOutNode node, BOOL fEnable);
+DWFAPI BOOL FDwfAnalogOutNodeEnableGet(HDWF hdwf, int idxChannel, AnalogOutNode node, BOOL* pfEnable);
 
-DWFAPI BOOL FDwfAnalogOutAmplitudeInfo(HDWF hdwf, int idxChannel, double* pvoltsMin, double* pvoltsMax);
-DWFAPI BOOL FDwfAnalogOutAmplitudeSet(HDWF hdwf, int idxChannel, double voltsAmplitude);
-DWFAPI BOOL FDwfAnalogOutAmplitudeGet(HDWF hdwf, int idxChannel, double* pvoltsAmplitude);
+DWFAPI BOOL FDwfAnalogOutNodeFunctionInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, int* pfsfunc); // use IsBitSet
+DWFAPI BOOL FDwfAnalogOutNodeFunctionSet(HDWF hdwf, int idxChannel, AnalogOutNode node, FUNC func);
+DWFAPI BOOL FDwfAnalogOutNodeFunctionGet(HDWF hdwf, int idxChannel, AnalogOutNode node, FUNC* pfunc);
 
-DWFAPI BOOL FDwfAnalogOutOffsetInfo(HDWF hdwf, int idxChannel, double* pvoltsMin, double* pvoltsMax);
-DWFAPI BOOL FDwfAnalogOutOffsetSet(HDWF hdwf, int idxChannel, double voltsOffset);
-DWFAPI BOOL FDwfAnalogOutOffsetGet(HDWF hdwf, int idxChannel, double* pvoltsOffset);
+DWFAPI BOOL FDwfAnalogOutNodeFrequencyInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, double* phzMin, double* phzMax);
+DWFAPI BOOL FDwfAnalogOutNodeFrequencySet(HDWF hdwf, int idxChannel, AnalogOutNode node, double hzFrequency);
+DWFAPI BOOL FDwfAnalogOutNodeFrequencyGet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* phzFrequency);
+// Carrier Amplitude or Modulation Index 
+DWFAPI BOOL FDwfAnalogOutNodeAmplitudeInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pMin, double* pMax);
+DWFAPI BOOL FDwfAnalogOutNodeAmplitudeSet(HDWF hdwf, int idxChannel, AnalogOutNode node, double vAmplitude);
+DWFAPI BOOL FDwfAnalogOutNodeAmplitudeGet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pvAmplitude);
 
-DWFAPI BOOL FDwfAnalogOutSymmetryInfo(HDWF hdwf, int idxChannel, double* ppercentageMin, double* ppercentageMax);
-DWFAPI BOOL FDwfAnalogOutSymmetrySet(HDWF hdwf, int idxChannel, double percentageSymmetry);
-DWFAPI BOOL FDwfAnalogOutSymmetryGet(HDWF hdwf, int idxChannel, double* ppercentageSymmetry);
+DWFAPI BOOL FDwfAnalogOutNodeOffsetInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pMin, double* pMax);
+DWFAPI BOOL FDwfAnalogOutNodeOffsetSet(HDWF hdwf, int idxChannel, AnalogOutNode node, double vOffset);
+DWFAPI BOOL FDwfAnalogOutNodeOffsetGet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pvOffset);
 
-DWFAPI BOOL FDwfAnalogOutPhaseInfo(HDWF hdwf, int idxChannel, double* pdegreeMin, double* pdegreeMax);
-DWFAPI BOOL FDwfAnalogOutPhaseSet(HDWF hdwf, int idxChannel, double degreePhase);
-DWFAPI BOOL FDwfAnalogOutPhaseGet(HDWF hdwf, int idxChannel, double* pdegreePhase);
+DWFAPI BOOL FDwfAnalogOutNodeSymmetryInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, double* ppercentageMin, double* ppercentageMax);
+DWFAPI BOOL FDwfAnalogOutNodeSymmetrySet(HDWF hdwf, int idxChannel, AnalogOutNode node, double percentageSymmetry);
+DWFAPI BOOL FDwfAnalogOutNodeSymmetryGet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* ppercentageSymmetry);
 
-DWFAPI BOOL FDwfAnalogOutDataInfo(HDWF hdwf, int idxChannel, int* pnSamplesMin, int* pnSamplesMax);
-DWFAPI BOOL FDwfAnalogOutDataSet(HDWF hdwf, int idxChannel, double* rgdData, int cdData);
+DWFAPI BOOL FDwfAnalogOutNodePhaseInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pdegreeMin, double* pdegreeMax);
+DWFAPI BOOL FDwfAnalogOutNodePhaseSet(HDWF hdwf, int idxChannel, AnalogOutNode node, double degreePhase);
+DWFAPI BOOL FDwfAnalogOutNodePhaseGet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* pdegreePhase);
 
+DWFAPI BOOL FDwfAnalogOutNodeDataInfo(HDWF hdwf, int idxChannel, AnalogOutNode node, int* pnSamplesMin, int* pnSamplesMax);
+DWFAPI BOOL FDwfAnalogOutNodeDataSet(HDWF hdwf, int idxChannel, AnalogOutNode node, double* rgdData, int cdData);
+
+// needed for EExplorer, don't care for ADiscovery
+DWFAPI BOOL FDwfAnalogOutCustomAMFMEnableSet(HDWF hdwf, int idxChannel, BOOL fEnable);
+DWFAPI BOOL FDwfAnalogOutCustomAMFMEnableGet(HDWF hdwf, int idxChannel, BOOL* pfEnable);
+
+// Control:
+DWFAPI BOOL FDwfAnalogOutReset(HDWF hdwf, int idxChannel);
+DWFAPI BOOL FDwfAnalogOutConfigure(HDWF hdwf, int idxChannel, BOOL fStart);
+DWFAPI BOOL FDwfAnalogOutStatus(HDWF hdwf, int idxChannel, DwfState* psts);
+DWFAPI BOOL FDwfAnalogOutNodePlayStatus(HDWF hdwf, int idxChannel, AnalogOutNode node, int* cdDataFree, int *cdDataLost, int *cdDataCorrupted);
+DWFAPI BOOL FDwfAnalogOutNodePlayData(HDWF hdwf, int idxChannel, AnalogOutNode node, double* rgdData, int cdData);
 
 
 // ANALOG IO INSTRUMENT FUNCTIONS
@@ -382,7 +431,6 @@ DWFAPI BOOL FDwfAnalogIOChannelNodeStatusInfo(HDWF hdwf, int idxChannel, int idx
 DWFAPI BOOL FDwfAnalogIOChannelNodeStatus(HDWF hdwf, int idxChannel, int idxNode, double* pvalue);
 
 
-
 // DIGITAL IO INSTRUMENT FUNCTIONS
 // Control:
 DWFAPI BOOL FDwfDigitalIOReset(HDWF hdwf);
@@ -399,7 +447,170 @@ DWFAPI BOOL FDwfDigitalIOOutputGet(HDWF hdwf, unsigned int* pfsOutput);
 DWFAPI BOOL FDwfDigitalIOInputInfo(HDWF hdwf, unsigned int* pfsInputMask);
 DWFAPI BOOL FDwfDigitalIOInputStatus(HDWF hdwf, unsigned int* pfsInput);
 
-// OBSOLATE, do not use them:
+
+// DIGITAL IN INSTRUMENT FUNCTIONS
+// Control and status: 
+DWFAPI BOOL FDwfDigitalInReset(HDWF hdwf);
+DWFAPI BOOL FDwfDigitalInConfigure(HDWF hdwf, BOOL fReconfigure, BOOL fStart);
+DWFAPI BOOL FDwfDigitalInStatus(HDWF hdwf, BOOL fReadData, DwfState* psts);
+DWFAPI BOOL FDwfDigitalInStatusSamplesLeft(HDWF hdwf, int *pcSamplesLeft);
+DWFAPI BOOL FDwfDigitalInStatusSamplesValid(HDWF hdwf, int * pcSamplesValid);
+DWFAPI BOOL FDwfDigitalInStatusIndexWrite(HDWF hdwf, int *pidxWrite);
+DWFAPI BOOL FDwfDigitalInStatusAutoTriggered(HDWF hdwf, BOOL* pfAuto);
+DWFAPI BOOL FDwfDigitalInStatusData(HDWF hdwf, void *rgData, int countOfDataBytes);
+
+// Acquistion configuration:
+DWFAPI BOOL FDwfDigitalInInternalClockInfo(HDWF hdwf, double* phzFreq);
+
+DWFAPI BOOL FDwfDigitalInClockSourceInfo(HDWF hdwf, int *pfsDwfDigitalInClockSource); // use IsBitSet
+DWFAPI BOOL FDwfDigitalInClockSourceSet(HDWF hdwf, DwfDigitalInClockSource v);
+DWFAPI BOOL FDwfDigitalInClockSourceGet(HDWF hdwf, DwfDigitalInClockSource *pv);
+
+DWFAPI BOOL FDwfDigitalInDividerInfo(HDWF hdwf, unsigned int *pdivMax);
+DWFAPI BOOL FDwfDigitalInDividerSet(HDWF hdwf, unsigned int div);
+DWFAPI BOOL FDwfDigitalInDividerGet(HDWF hdwf, unsigned int *pdiv);
+
+DWFAPI BOOL FDwfDigitalInBitsInfo(HDWF hdwf, int *pnBits); // Returns the number of Digital In bits
+DWFAPI BOOL FDwfDigitalInSampleFormatSet(HDWF hdwf, int nBits);  // valid options 8/16/32
+DWFAPI BOOL FDwfDigitalInSampleFormatGet(HDWF hdwf, int *pnBits);
+
+DWFAPI BOOL FDwfDigitalInBufferSizeInfo(HDWF hdwf, int *pnSizeMax);
+DWFAPI BOOL FDwfDigitalInBufferSizeSet(HDWF hdwf, int nSize);
+DWFAPI BOOL FDwfDigitalInBufferSizeGet(HDWF hdwf, int *pnSize);
+
+DWFAPI BOOL FDwfDigitalInSampleModeInfo(HDWF hdwf, int *pfsDwfDigitalInSampleMode); // use IsBitSet
+DWFAPI BOOL FDwfDigitalInSampleModeSet(HDWF hdwf, DwfDigitalInSampleMode v);  // 
+DWFAPI BOOL FDwfDigitalInSampleModeGet(HDWF hdwf, DwfDigitalInSampleMode *pv);
+
+DWFAPI BOOL FDwfDigitalInAcquisitionModeInfo(HDWF hdwf, int *pfsacqmode); // use IsBitSet
+DWFAPI BOOL FDwfDigitalInAcquisitionModeSet(HDWF hdwf, ACQMODE acqmode);
+DWFAPI BOOL FDwfDigitalInAcquisitionModeGet(HDWF hdwf, ACQMODE *pacqmode);
+
+// Trigger configuration:
+DWFAPI BOOL FDwfDigitalInTriggerSourceInfo(HDWF hdwf, int* pfstrigsrc); // use IsBitSet
+DWFAPI BOOL FDwfDigitalInTriggerSourceSet(HDWF hdwf, TRIGSRC trigsrc);
+DWFAPI BOOL FDwfDigitalInTriggerSourceGet(HDWF hdwf, TRIGSRC* ptrigsrc);
+
+DWFAPI BOOL FDwfDigitalInTriggerPositionInfo(HDWF hdwf, unsigned int *pnSamplesAfterTriggerMax);
+DWFAPI BOOL FDwfDigitalInTriggerPositionSet(HDWF hdwf, unsigned int cSamplesAfterTrigger);
+DWFAPI BOOL FDwfDigitalInTriggerPositionGet(HDWF hdwf, unsigned int *pcSamplesAfterTrigger);
+
+DWFAPI BOOL FDwfDigitalInTriggerAutoTimeoutInfo(HDWF hdwf, double* psecMin, double* psecMax, double* pnSteps);
+DWFAPI BOOL FDwfDigitalInTriggerAutoTimeoutSet(HDWF hdwf, double secTimeout);
+DWFAPI BOOL FDwfDigitalInTriggerAutoTimeoutGet(HDWF hdwf, double* psecTimeout);
+
+DWFAPI BOOL FDwfDigitalInTriggerInfo(HDWF hdwf, unsigned int *pfsLevelLow, unsigned int *pfsLevelHigh, unsigned int *pfsEdgeRise, unsigned int *pfsEdgeFall);
+DWFAPI BOOL FDwfDigitalInTriggerSet(HDWF hdwf, unsigned int fsLevelLow, unsigned int fsLevelHigh, unsigned int fsEdgeRise, unsigned int fsEdgeFall);
+DWFAPI BOOL FDwfDigitalInTriggerGet(HDWF hdwf, unsigned int *pfsLevelLow, unsigned int *pfsLevelHigh, unsigned int *pfsEdgeRise, unsigned int *pfsEdgeFall);
+// the logic for trigger bits: Low and High and (Rise or Fall)
+// bits set in Rise and Fall means any edge
+
+// DIGITAL OUT INSTRUMENT FUNCTIONS
+// Control:
+DWFAPI BOOL FDwfDigitalOutReset(HDWF hdwf);
+DWFAPI BOOL FDwfDigitalOutConfigure(HDWF hdwf, BOOL fStart);
+DWFAPI BOOL FDwfDigitalOutStatus(HDWF hdwf, DwfState* psts);
+
+// Configuration:
+DWFAPI BOOL FDwfDigitalOutInternalClockInfo(HDWF hdwf, double* phzFreq);
+
+DWFAPI BOOL FDwfDigitalOutTriggerSourceInfo(HDWF hdwf, int* pfstrigsrc); // use IsBitSet
+DWFAPI BOOL FDwfDigitalOutTriggerSourceSet(HDWF hdwf, TRIGSRC trigsrc);
+DWFAPI BOOL FDwfDigitalOutTriggerSourceGet(HDWF hdwf, TRIGSRC* ptrigsrc);
+
+DWFAPI BOOL FDwfDigitalOutRunInfo(HDWF hdwf, double* psecMin, double* psecMax);
+DWFAPI BOOL FDwfDigitalOutRunSet(HDWF hdwf, double secRun);
+DWFAPI BOOL FDwfDigitalOutRunGet(HDWF hdwf, double* psecRun);
+DWFAPI BOOL FDwfDigitalOutRunStatus(HDWF hdwf, double* psecRun);
+
+DWFAPI BOOL FDwfDigitalOutWaitInfo(HDWF hdwf, double* psecMin, double* psecMax);
+DWFAPI BOOL FDwfDigitalOutWaitSet(HDWF hdwf, double secWait);
+DWFAPI BOOL FDwfDigitalOutWaitGet(HDWF hdwf, double* psecWait);
+
+DWFAPI BOOL FDwfDigitalOutRepeatInfo(HDWF hdwf, unsigned int* pnMin, unsigned int* pnMax);
+DWFAPI BOOL FDwfDigitalOutRepeatSet(HDWF hdwf, unsigned int cRepeat);
+DWFAPI BOOL FDwfDigitalOutRepeatGet(HDWF hdwf, unsigned int* pcRepeat);
+DWFAPI BOOL FDwfDigitalOutRepeatStatus(HDWF hdwf, unsigned int* pcRepeat);
+
+DWFAPI BOOL FDwfDigitalOutRepeatTriggerSet(HDWF hdwf, BOOL fRepeatTrigger);
+DWFAPI BOOL FDwfDigitalOutRepeatTriggerGet(HDWF hdwf, BOOL* pfRepeatTrigger);
+
+DWFAPI BOOL FDwfDigitalOutCount(HDWF hdwf, int* pcChannel);
+DWFAPI BOOL FDwfDigitalOutEnableSet(HDWF hdwf, int idxChannel, BOOL fEnable);
+DWFAPI BOOL FDwfDigitalOutEnableGet(HDWF hdwf, int idxChannel, BOOL* pfEnable);
+
+DWFAPI BOOL FDwfDigitalOutOutputInfo(HDWF hdwf, int idxChannel, int* pfsDwfDigitalOutOutput); // use IsBitSet
+DWFAPI BOOL FDwfDigitalOutOutputSet(HDWF hdwf, int idxChannel, DwfDigitalOutOutput v); 
+DWFAPI BOOL FDwfDigitalOutOutputGet(HDWF hdwf, int idxChannel, DwfDigitalOutOutput* pv);
+
+DWFAPI BOOL FDwfDigitalOutTypeInfo(HDWF hdwf, int idxChannel, int *pfsDwfDigitalOutType); // use IsBitSet
+DWFAPI BOOL FDwfDigitalOutTypeSet(HDWF hdwf, int idxChannel, DwfDigitalOutType v);
+DWFAPI BOOL FDwfDigitalOutTypeGet(HDWF hdwf, int idxChannel, DwfDigitalOutType *pv);
+
+DWFAPI BOOL FDwfDigitalOutIdleInfo(HDWF hdwf, int idxChannel, int *pfsDwfDigitalOutIdle); // use IsBitSet
+DWFAPI BOOL FDwfDigitalOutIdleSet(HDWF hdwf, int idxChannel, DwfDigitalOutIdle v);
+DWFAPI BOOL FDwfDigitalOutIdleGet(HDWF hdwf, int idxChannel, DwfDigitalOutIdle *pv);
+
+DWFAPI BOOL FDwfDigitalOutDividerInfo(HDWF hdwf, int idxChannel, unsigned int *vMin, unsigned int *vMax);
+DWFAPI BOOL FDwfDigitalOutDividerInitSet(HDWF hdwf, int idxChannel, unsigned int v);
+DWFAPI BOOL FDwfDigitalOutDividerInitGet(HDWF hdwf, int idxChannel, unsigned int *pv);
+DWFAPI BOOL FDwfDigitalOutDividerSet(HDWF hdwf, int idxChannel, unsigned int v);
+DWFAPI BOOL FDwfDigitalOutDividerGet(HDWF hdwf, int idxChannel, unsigned int *pv);
+
+DWFAPI BOOL FDwfDigitalOutCounterInfo(HDWF hdwf, int idxChannel, unsigned int *vMin, unsigned int *vMax);
+DWFAPI BOOL FDwfDigitalOutCounterInitSet(HDWF hdwf, int idxChannel, BOOL fHigh, unsigned int v);
+DWFAPI BOOL FDwfDigitalOutCounterInitGet(HDWF hdwf, int idxChannel, int* pfHigh, unsigned int *pv);
+DWFAPI BOOL FDwfDigitalOutCounterSet(HDWF hdwf, int idxChannel, unsigned int vLow, unsigned int vHigh);
+DWFAPI BOOL FDwfDigitalOutCounterGet(HDWF hdwf, int idxChannel, unsigned int *pvLow, unsigned int *pvHigh);
+
+DWFAPI BOOL FDwfDigitalOutDataInfo(HDWF hdwf, int idxChannel, unsigned int *pcountOfBitsMax);
+DWFAPI BOOL FDwfDigitalOutDataSet(HDWF hdwf, int idxChannel, void *rgBits, unsigned int countOfBits);
+// bits order is lsb first
+// for TS output the count of bits its the total number of IO|OE bits, it should be an even number
+// BYTE:   0                 |1     ...
+// bit:    0 |1 |2 |3 |...|7 |0 |1 |...
+// sample: IO|OE|IO|OE|...|OE|IO|OE|...
+
+
+// OBSOLETE, do not use them:
+typedef BYTE STS;
+const STS stsRdy        = 0;
+const STS stsArm        = 1;
+const STS stsDone       = 2;
+const STS stsTrig       = 3;
+const STS stsCfg        = 4;
+const STS stsPrefill    = 5;
+const STS stsNotDone    = 6;
+const STS stsTrigDly    = 7;
+const STS stsError      = 8;
+const STS stsBusy       = 9;
+const STS stsStop       = 10;
+
+DWFAPI BOOL FDwfAnalogOutEnableSet(HDWF hdwf, int idxChannel, BOOL fEnable);
+DWFAPI BOOL FDwfAnalogOutEnableGet(HDWF hdwf, int idxChannel, BOOL* pfEnable);
+DWFAPI BOOL FDwfAnalogOutFunctionInfo(HDWF hdwf, int idxChannel, int* pfsfunc); // use IsBitSet
+DWFAPI BOOL FDwfAnalogOutFunctionSet(HDWF hdwf, int idxChannel, FUNC func);
+DWFAPI BOOL FDwfAnalogOutFunctionGet(HDWF hdwf, int idxChannel, FUNC* pfunc);
+DWFAPI BOOL FDwfAnalogOutFrequencyInfo(HDWF hdwf, int idxChannel, double* phzMin, double* phzMax);
+DWFAPI BOOL FDwfAnalogOutFrequencySet(HDWF hdwf, int idxChannel, double hzFrequency);
+DWFAPI BOOL FDwfAnalogOutFrequencyGet(HDWF hdwf, int idxChannel, double* phzFrequency);
+DWFAPI BOOL FDwfAnalogOutAmplitudeInfo(HDWF hdwf, int idxChannel, double* pvoltsMin, double* pvoltsMax);
+DWFAPI BOOL FDwfAnalogOutAmplitudeSet(HDWF hdwf, int idxChannel, double voltsAmplitude);
+DWFAPI BOOL FDwfAnalogOutAmplitudeGet(HDWF hdwf, int idxChannel, double* pvoltsAmplitude);
+DWFAPI BOOL FDwfAnalogOutOffsetInfo(HDWF hdwf, int idxChannel, double* pvoltsMin, double* pvoltsMax);
+DWFAPI BOOL FDwfAnalogOutOffsetSet(HDWF hdwf, int idxChannel, double voltsOffset);
+DWFAPI BOOL FDwfAnalogOutOffsetGet(HDWF hdwf, int idxChannel, double* pvoltsOffset);
+DWFAPI BOOL FDwfAnalogOutSymmetryInfo(HDWF hdwf, int idxChannel, double* ppercentageMin, double* ppercentageMax);
+DWFAPI BOOL FDwfAnalogOutSymmetrySet(HDWF hdwf, int idxChannel, double percentageSymmetry);
+DWFAPI BOOL FDwfAnalogOutSymmetryGet(HDWF hdwf, int idxChannel, double* ppercentageSymmetry);
+DWFAPI BOOL FDwfAnalogOutPhaseInfo(HDWF hdwf, int idxChannel, double* pdegreeMin, double* pdegreeMax);
+DWFAPI BOOL FDwfAnalogOutPhaseSet(HDWF hdwf, int idxChannel, double degreePhase);
+DWFAPI BOOL FDwfAnalogOutPhaseGet(HDWF hdwf, int idxChannel, double* pdegreePhase);
+DWFAPI BOOL FDwfAnalogOutDataInfo(HDWF hdwf, int idxChannel, int* pnSamplesMin, int* pnSamplesMax);
+DWFAPI BOOL FDwfAnalogOutDataSet(HDWF hdwf, int idxChannel, double* rgdData, int cdData);
+DWFAPI BOOL FDwfAnalogOutPlayStatus(HDWF hdwf, int idxChannel, int* cdDataFree, int *cdDataLost, int *cdDataCorrupted);
+DWFAPI BOOL FDwfAnalogOutPlayData(HDWF hdwf, int idxChannel, double* rgdData, int cdData);
+
 DWFAPI BOOL FDwfEnumAnalogInChannels(int idxDevice, int* pnChannels);
 DWFAPI BOOL FDwfEnumAnalogInBufferSize(int idxDevice, int* pnBufferSize);
 DWFAPI BOOL FDwfEnumAnalogInBits(int idxDevice, int* pnBits);

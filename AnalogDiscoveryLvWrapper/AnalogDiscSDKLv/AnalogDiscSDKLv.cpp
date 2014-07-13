@@ -10,11 +10,8 @@
 // 
 
 
-
 #include "stdafx.h"
 #include "AnalogDiscSDKLv.h"
-
-
 
 
 /********************************************************
@@ -33,17 +30,6 @@ bool FApi(const char * szApi, BOOL fResult){
  //   if(debugLevel>=3) PrintDateTime(false);
     return true;
 }
-
-
-//typedef struct{
-//	int DevId;
-//	char DevName[32];
-//	char SerialNum[32];
-//	char userName[32];
-//	int isBusy;
-//}DeviceInfo;
-
-
 
 
 int Enum_DevLv(ENUMFILTER enumfilter, int * pnDevice, char DevName[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], char SN[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], char UserName[MAX_DEVICE_NUMBER][DEVICE_INFO_STRING_LENGTH], int isBusy[MAX_DEVICE_NUMBER], DEVID DeviceID[MAX_DEVICE_NUMBER], DEVVER DeviceVersion[MAX_DEVICE_NUMBER]){
@@ -99,17 +85,38 @@ int SetAutoConfig_DevLv(HDWF hdwf, int fAutoConfig){
 int GetInfo_AnalogIn_Trigger(HDWF hdwf, TRIGSRC * ptrigsrc){
 	return FDwfAnalogInTriggerSourceGet(hdwf, ptrigsrc);
 }
-int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout){
+int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout, double secPosition, double secHoldOff){
 	int noerror = false;
 
 	if(FDwfAnalogInTriggerAutoTimeoutSet(hdwf, timeout))
 		noerror = true;
 	if(FDwfAnalogInTriggerSourceSet(hdwf, AItrigsrc))
-		noerror = true;
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerPositionSet(hdwf, secPosition))
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerHoldOffSet(hdwf, secHoldOff))
+		noerror = noerror && true;
 	return noerror;
 }
 
+int Set_AnalogIn_TriggerDetector(HDWF hdwf, int idxChannel, TRIGCOND trigcond, TRIGTYPE trigtype, double voltsLevel, FILTER filter, double HystersisvoltsLEvel){
+	int noerror = false;
 
+	if(FDwfAnalogInTriggerChannelSet(hdwf, idxChannel))
+		noerror = true;
+	if(FDwfAnalogInTriggerConditionSet(hdwf, trigcond))
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerTypeSet(hdwf, trigtype))
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerLevelSet(hdwf, voltsLevel))
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerFilterSet(hdwf, filter))
+		noerror = noerror && true;
+	if(FDwfAnalogInTriggerHysteresisSet(hdwf, voltsLevel))
+		noerror = noerror && true;
+
+	return noerror;
+}
 
 //AnalogIn 
 int GetStatus_AnalogIn(HDWF hdwf, int fReadData, STS *psts){
@@ -126,15 +133,17 @@ int Config_AnalogIn(HDWF hdwf,	int fReconfigure, int fStart){
 }
 
 // Channel independent configure
-int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode = acqmodeSingle /*, double RecordLength */){
+int SetAcquisitionConfig_AnalogIn(HDWF hdwf, double hzFrquency, int nSize, ACQMODE  AcqMode, double sLength){
 	int noerror = false;
 
 	if(FDwfAnalogInFrequencySet(hdwf, hzFrquency))
 		noerror = true;
 	if(FDwfAnalogInBufferSizeSet(hdwf, nSize))
-		noerror = true;
+		noerror = noerror && true;
 	if(FDwfAnalogInAcquisitionModeSet(hdwf, AcqMode))
-		noerror = true;
+		noerror = noerror && true;
+	if(FDwfAnalogInRecordLengthSet(hdwf, sLength))
+		noerror = noerror && true;
 	return noerror;
 }
 int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
@@ -144,16 +153,16 @@ int GetAcquisitionsConfig_AnalogIn(HDWF hdwf){
 
 // Channel dependent configure
 int SetChannelsConfig_AnalogIn(HDWF hdwf, int idxChannel, int fEnable,	double voltsRange, FILTER Filter, double voltOffset){
-	int noerror = 0;
+	int noerror = false;
 
 	if(FDwfAnalogInChannelEnableSet(hdwf, idxChannel, fEnable))
 		noerror = true;
 	if(FDwfAnalogInChannelFilterSet(hdwf, idxChannel, Filter))
-		noerror = true;
+		noerror = noerror && true;
 	if(FDwfAnalogInChannelRangeSet(hdwf, idxChannel, voltsRange))
-		noerror = true;
+		noerror = noerror && true;
 	if(FDwfAnalogInChannelOffsetSet(hdwf, idxChannel, voltOffset))
-		noerror = true; 	// voltOffset consistent with official manual
+		noerror = noerror && true; 	// voltOffset consistent with official manual
 
 	return noerror;
 }
@@ -161,3 +170,108 @@ int SetChannelsConfig_AnalogIn(HDWF hdwf, int idxChannel, int fEnable,	double vo
 int GetChannelsConfig_AnalogIn(HDWF hdwf){
 	return 0;
 }
+
+
+//AnalogOut sections:
+
+// AnalogOut functions
+extern "C" __declspec(dllexport) int GetChannelCount_AnalogOut(
+	HDWF hdwf,
+	int *pcChannel
+	){
+	int noerror = false;
+
+	if(FDwfAnalogOutCount(hdwf, pcChannel))
+		noerror = true;
+
+	return noerror;
+};
+extern "C" __declspec(dllexport) int SetMasterNode_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	int idxMaster
+	){
+	return FDwfAnalogOutMasterSet(hdwf, idxChannel, idxMaster);
+};
+extern "C" __declspec(dllexport) int fStart_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	int fStart
+	){
+	return FDwfAnalogOutConfigure(hdwf, idxChannel, fStart);
+};
+extern "C" __declspec(dllexport) int SetConfig_AnalogOut(
+	HDWF hdwf, 
+	int idxChannel,
+	AnalogOutNode node,
+	double hzFrequency, 
+	double vAmplitude, 
+	double vOffset,
+	double degPhase,
+	FUNC func
+	){
+	int noerror = false;
+	
+	if(FDwfAnalogOutNodeFunctionSet(hdwf, idxChannel, node, func))
+		noerror = true;
+	if(FDwfAnalogOutNodeFrequencySet(hdwf, idxChannel, node, hzFrequency))
+		noerror =  noerror && true;
+	if(FDwfAnalogOutNodeAmplitudeSet(hdwf, idxChannel, node, vAmplitude))
+		noerror =  noerror && true;
+	if(FDwfAnalogOutNodeOffsetSet(hdwf, idxChannel, node, vOffset))
+		noerror =  noerror && true;
+	if(FDwfAnalogOutNodePhaseSet(hdwf, idxChannel, node, degPhase))
+		noerror =  noerror && true;
+
+	return noerror;	
+};
+extern "C" __declspec(dllexport) int SetChannelEnable_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	int fEnable
+	){
+	return FDwfAnalogOutNodeEnableSet(hdwf, idxChannel, node, fEnable);
+};
+extern "C" __declspec(dllexport) int SetFunctionData_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	double * rgdData, // range +/-1 normalized
+	int cdData
+	){
+	return FDwfAnalogOutNodeDataSet(hdwf, idxChannel, node, rgdData, cdData);
+};
+extern "C" __declspec(dllexport) int SetSymmetry_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	double percentageSymmetry	//duty cycle
+	){
+	return FDwfAnalogOutNodeSymmetrySet(hdwf, idxChannel, node, percentageSymmetry);
+};
+extern "C" __declspec(dllexport) int SetTriggerSource_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	TRIGSRC trigsrc
+	){
+	return FDwfAnalogOutTriggerSourceSet(hdwf, idxChannel, trigsrc);
+};
+extern "C" __declspec(dllexport) int SetStates_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	double secWait,
+	double secRun,	// default 0, => infinite run
+	int cRepeat
+	){
+	int noerror = false;
+	
+	if(FDwfAnalogOutRunSet(hdwf, idxChannel, secRun))
+		noerror = true;
+	if(FDwfAnalogOutWaitSet(hdwf, idxChannel, secWait))
+		noerror = noerror && true;
+	if(FDwfAnalogOutRepeatSet(hdwf, idxChannel, cRepeat))
+		noerror = noerror && true;
+
+	return noerror;
+};

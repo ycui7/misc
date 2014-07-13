@@ -1,5 +1,5 @@
 #include "dwf.h"
-#define DEVICE_INFO_STRING_LENGTH 128	// string length of device info calling return
+#define DEVICE_INFO_STRING_LENGTH 32	// string length of device info calling return
 #define MAX_DEVICE_NUMBER 4				//increase this number to support more than 4 device, Do not if 4 devices actually work though. 
 
 // Device Enumeration
@@ -23,19 +23,16 @@ extern "C" __declspec(dllexport) int SetAutoConfig_DevLv(HDWF hdwf, int fAutoCon
 // Trigger functions
 
 extern "C" __declspec(dllexport) int GetInfo_AnalogIn_Trigger(HDWF hdwf, TRIGSRC * ptrigsrc);
-extern "C" __declspec(dllexport) int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout);
+extern "C" __declspec(dllexport) int Set_AnalogIn_Trigger(HDWF hdwf, TRIGSRC AItrigsrc, double timeout, double secPosition, double secHoldOff);
 
 // Analog Trigger functins
-extern "C" __declspec(dllexport) int Set_Analog_Trigger(HDWF hdwf, 
-	int idxchannel,				// channel index
-	double position,			// trigger delay
-	double timeout,
-	double holdoff,				// trigger holdoff
-	TRIGTYPE type,				// edge, pulse, transition triger
-	FILTER filter,				// decimate, average
+extern "C" __declspec(dllexport) int Set_AnalogIn_TriggerDetector(HDWF hdwf, 
+	int idxChannel,				// channel index
+	TRIGCOND trigcond,			// rising or falling 
+	TRIGTYPE trigtype,			// edge, pulse, transition triger
 	double voltsLevel,			// trigger level
-	double HystersisvoltsLEvel,	// hysterisis level
-	TRIGCOND trigcond			// rising or falling 
+	FILTER filter,				// decimate, average
+	double HystersisvoltsLEvel	// hysterisis level
 	);
 extern "C" __declspec(dllexport) int GetConfig_Trigger(HDWF hdwf);
 extern "C" __declspec(dllexport) int GetStatus_Trigger(HDWF hdwf);
@@ -72,9 +69,9 @@ extern "C" __declspec(dllexport) int Config_AnalogIn(HDWF hdwf,	//rearm
 extern "C" __declspec(dllexport) int SetAcquisitionConfig_AnalogIn(HDWF hdwf,
 	double hzFrquency,	// sampling rate
 	int nSize,			// buffer size
-	ACQMODE AcqMode		// acqmodeSingle: single acq
+	ACQMODE AcqMode,	// acqmodeSingle: single acq
 						// acqmodeRecord: acquisition for length of time
-//	double RecordLength	// dupliate of buffersize, commmented.	
+	double sLength		// record length in second, for RecordLength Mode
 	);
 extern "C" __declspec(dllexport) int GetAcquisitionsConfig_AnalogIn(HDWF hdwf);
 
@@ -95,4 +92,58 @@ extern "C" __declspec(dllexport) int SetRange_AnalogIn(HDWF hdwf, int indexCh, d
 
 
 // AnalogOut functions
-extern "C" __declspec(dllexport) int SetDataAnalogOut(HDWF hdwf);
+extern "C" __declspec(dllexport) int GetChannelCount_AnalogOut(
+	HDWF hdwf,
+	int *pcChannel
+	);
+extern "C" __declspec(dllexport) int SetMasterNode_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	int idxMaster
+	);
+extern "C" __declspec(dllexport) int fStart_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	int fStart
+	);
+extern "C" __declspec(dllexport) int SetConfig_AnalogOut(
+	HDWF hdwf, 
+	int idxChannel,
+	AnalogOutNode node,
+	double hzFrequency, 
+	double vAmplitude, 
+	double vOffset,
+	double degPhase,
+	FUNC func
+	);
+extern "C" __declspec(dllexport) int SetChannelEnable_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	int fEnable
+	);
+extern "C" __declspec(dllexport) int SetFunctionData_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	double rgdData[16384], // range +/-1 normalized
+	int cdData
+	);
+extern "C" __declspec(dllexport) int SetSymmetry_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	AnalogOutNode node,
+	double percentageSymmetry	//duty cycle
+	);
+extern "C" __declspec(dllexport) int SetTriggerSource_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	TRIGSRC trigsrc
+	);
+extern "C" __declspec(dllexport) int SetStates_AnalogOut(
+	HDWF hdwf,
+	int idxChannel,
+	double secWait,
+	double secRun,	// default 0, => infinite run
+	int cRepeat
+	);
